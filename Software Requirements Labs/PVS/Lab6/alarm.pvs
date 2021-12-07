@@ -1,0 +1,60 @@
+% PROVE WITHOUT GRIND
+% Translating informal statements into predicate logic
+alarm: THEORY
+
+BEGIN
+%% ALARM SPECIFICATION
+% There are experts for a chemical plant
+% and the plant can generate vraious kinds of alarms
+  ALARM: TYPE = {electrical, mechanical, biological, chemical}
+  a: VAR ALARM
+  
+  EXPERT: TYPE = {Jack, Pam}
+  e: VAR EXPERT
+  % Note: Jack?(e) asserts that "e = Jack"
+
+% Use EA_thm in Theory predicate_thm 
+importing predicate_thm[EXPERT,ALARM]
+
+% Expert e is qualified to handle alarm a
+  handles (e,a): bool 
+  %i.e. handles: [EXPERT, ALARM -> bool]
+
+% If there is an alarm that all experts can handle
+% then all experts can handle some alarm
+  conjecture1: CONJECTURE
+    (EXISTS a: (FORALL e: handles(e,a)))
+    => (FORALL e: (EXISTS a: handles(e,a)))
+
+%|- conjecture1 : PROOF
+%|- (then (lemma EA2_Thm) (inst -1 "handles"))
+%|- QED
+% This is an instance of a Predicate Logic Theorem
+% Use EA2_thm
+
+
+% Jack can handle electrical and mecahanical alarms
+  axm1: AXIOM
+    handles (Jack,electrical) AND handles (Jack, mechanical)
+
+% Pam can handle any alarm
+  axm2: AXIOM (FORALL a: handles (Pam, a))
+
+% There is an alarm that can be handled by all experts
+  conjecture2: CONJECTURE
+    EXISTS a: (FORALL e: handles(e,a))
+% Note than GRIND fails
+
+%|- conjecture2 : PROOF
+%|- (then (inst 1 electrical)
+%|-  (spread (induct e)
+%|-   ((then (lemma axm1) (prop))
+%|-    (then (lemma axm2) (inst -1 electrical)))))
+%|- QED
+
+END alarm
+
+% Proof summary for theory alarm
+%     conjecture1...........................proved - complete   [shostak](0.01 s)
+%     conjecture2...........................proved - complete   [shostak](0.01 s)
+%     Theory totals: 2 formulas, 2 attempted, 2 succeeded (0.02 s)

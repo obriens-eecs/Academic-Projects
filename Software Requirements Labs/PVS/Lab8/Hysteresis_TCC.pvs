@@ -1,0 +1,162 @@
+% You should be able to prove: BOOL_TCC1
+% hysteresis_req1_TCC1: unfinished because it is not disjoint
+% THEOREM correct_hysteresis_st: unfinished, cannot be proved
+% TBD: Complete env (XIN1, XIN2, EPS) to make the rest prove
+Hysteresis_tcc[delta: posreal] : THEORY
+  BEGIN
+    importing Time[delta]
+    % REAL---|XIN1       Q|---BOOL
+    % REAL---|XIN2        | 
+    % REAL---|EPS         | 
+    %        +------------+
+
+    % monitored variables
+    XIN1 : VAR [DTIME -> real] % signal value
+    XIN2 : VAR [DTIME -> real] % set-point
+    EPS  : VAR [DTIME -> real] % hysteresis band size
+
+    % controlled variables
+    BOOL : TYPE+ = subrange(0,1)  % programming type for Boolean
+    Q    : VAR [DTIME -> BOOL]    % alarm
+
+    % =============================================
+    % ST implementation of the HYSTERESIS block
+    % =============================================
+    % FUNCTION_BLOCK HYSTERESIS
+    %     (* Boolean hysteresis on difference *) 
+    %     (* of REAL inputs, XIN1 - XIN2 *)
+    %   VAR_INPUT XIN1, XIN2, EPS : REAL; END_VAR
+    %   VAR_OUTPUT Q : BOOL := 0; END_VAR
+    %   IF Q THEN 
+    %     IF XIN1 < (XIN2 - EPS) THEN 
+    %       Q := 0; 
+    %     END_IF ; 
+    %   ELSIF XIN1 > (XIN2 + EPS) THEN 
+    %     Q := 1 ;
+    %   END_IF ;
+    % END_FUNCTION_BLOCK
+    % =============================================
+    hysteresis_st (XIN1, XIN2, EPS, Q): bool =
+      FORALL (i: DTIME):
+        COND
+        i = 0 -> 
+          Q(0) = 0,
+        i > 0 -> 
+          IF Q(i - 1) = 1 THEN
+            IF XIN1(i) < (XIN2(i) - EPS(i)) THEN
+              Q(i) = 0
+            ELSE % implicit from the ST
+              Q(i) = Q(i - 1)
+            ENDIF
+          ELSIF XIN1(i) > (XIN2(i) + EPS(i)) THEN
+            Q(i) = 1
+          ELSE   % implicit from the ST
+            Q(i) = Q(i - 1)
+          ENDIF
+        ENDCOND
+
+% For the above we obtain an unproven disjointness TCC
+% Disjointness TCC generated (at line 65, column 10) for
+    % COND XIN1(i) > (XIN2(i) + EPS(i)) -> Q(i) = 1,
+    %      XIN1(i) <= (XIN2(i) + EPS(i)) AND XIN1(i) >= (XIN2(i) - EPS(i))
+    %        -> Q(i) = Q(i - 1),
+    %      XIN1(i) < (XIN2(i) - EPS(i)) -> Q(i) = 0
+    % ENDCOND
+  % unfinished
+  
+% hysteresis_req1_TCC1: OBLIGATION
+%   FORALL (XIN1: [DTIME[delta] -> real], XIN2: [DTIME[delta] -> real],
+%           EPS: [DTIME[delta] -> real], i: DTIME[delta]):
+%     i > 0 IMPLIES
+%      NOT (XIN1(i) > (XIN2(i) + EPS(i)) AND
+%            XIN1(i) <= (XIN2(i) + EPS(i)) AND XIN1(i) >= (XIN2(i) - EPS(i)))
+%       AND
+%       NOT (XIN1(i) > (XIN2(i) + EPS(i)) AND XIN1(i) < (XIN2(i) - EPS(i))) AND
+%        NOT ((XIN1(i) <= (XIN2(i) + EPS(i)) AND XIN1(i) >= (XIN2(i) - EPS(i)))
+%              AND XIN1(i) < (XIN2(i) - EPS(i)));
+
+% Rule? (grind)
+% Trying repeated skolemization, instantiation, and if-lifting,
+% this simplifies to: 
+% hysteresis_req1_TCC1 :  
+
+% [-1]  i > 0
+% {-2}  XIN1(i) > EPS(i) + XIN2(i)
+% {-3}  XIN1(i) < (XIN2(i) - EPS(i))
+%   |-------
+
+% Rule?
+% Suppose {X2 -> 1, EPS -> -1}.
+% Then any value for X1 in the range 0 < X1 AND X1 < 2
+% will trigger the first and third conditions in the specification function table.
+% Thus rows 1 and 3 are not disjoint, e.g. for X1=1.
+% In proof terms for disjointhess, we must show: NOT (C1 AND C3) 
+% But we have a counter-example, i.e. {X1 -> 1, X2 -> 1, EPS -> -1}
+% NOT (1 > 0 AND 1 < 2) = NOT (TRUE) = FALSE
+% Thus NOT (C1 AND C3) is not a theorem.
+% So EPS should be non-negative and better something greater than one
+
+
+    % Black-box requirements of HYSTERESIS
+    hysteresis_req1 (XIN1, XIN2, EPS, Q): bool = 
+      FORALL (i: DTIME): 
+        COND
+        i = 0 ->
+          Q(0) = 0,
+        i > 0 ->
+          COND
+          % ====================================================
+              XIN1(i) >  (XIN2(i) + EPS(i)) -> Q(i) = 1,
+          % ====================================================
+              XIN1(i) <= (XIN2(i) + EPS(i))
+          AND XIN1(i) >= (XIN2(i) - EPS(i)) -> Q(i) = Q(i - 1),
+          % ====================================================
+              XIN1(i) <  (XIN2(i) - EPS(i)) -> Q(i) = 0
+          % ====================================================
+          ENDCOND
+        ENDCOND
+
+% Will not prove without envionmental assumption
+   correct_hysteresis_st1 : THEOREM 
+           hysteresis_st (XIN1, XIN2, EPS, Q)
+        IMPLIES 
+           hysteresis_req1(XIN1, XIN2, EPS, Q)
+
+
+ % environment assumption
+    env (XIN1, XIN2, EPS): bool =
+      TRUE
+    % TBD: complete this; may not set it false
+
+ % Black-box requirements of HYSTERESIS
+    hysteresis_req2 (XIN1, XIN2, EPS, Q): bool = 
+      env (XIN1, XIN2, EPS) % necessary for the disjointness TCC
+      IMPLIES
+      FORALL (i: DTIME): 
+        COND
+        i = 0 ->
+          Q(0) = 0,
+        i > 0 ->
+          COND
+          % ====================================================
+              XIN1(i) >  (XIN2(i) + EPS(i)) -> Q(i) = 1,
+          % ====================================================
+              XIN1(i) <= (XIN2(i) + EPS(i))
+          AND XIN1(i) >= (XIN2(i) - EPS(i)) -> Q(i) = Q(i - 1),
+          % ====================================================
+              XIN1(i) <  (XIN2(i) - EPS(i)) -> Q(i) = 0
+          % ====================================================
+          ENDCOND
+        ENDCOND
+      
+    correct_hysteresis_st2 : THEOREM 
+        (env (XIN1, XIN2, EPS)
+         AND
+         hysteresis_st (XIN1, XIN2, EPS, Q))
+        IMPLIES 
+        hysteresis_req2(XIN1, XIN2, EPS, Q)
+
+%|- correct_hysteresis_st2 : PROOF
+%|- (grind)
+%|- QED
+  END Hysteresis_tcc

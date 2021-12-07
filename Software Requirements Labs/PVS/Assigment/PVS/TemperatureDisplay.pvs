@@ -1,0 +1,24 @@
+TemperatureDisplay   [ delta: posreal ]
+		: THEORY
+
+  BEGIN
+
+	importing Time[delta]
+	importing Mode[delta]
+	i: VAR DTIME
+
+	c_td : [DTIME -> real]
+
+	c_td_func(i): bool =
+		COND
+		i = 0 -> 0
+		i > 0 ->
+			COND
+			c_md(i-1) = off -> c_td(i) = 0,
+			c_md(i-1) = init -> c_td(i) = 0,
+			c_md(i-1) = normal -> c_td(i) = m_tm(i),
+			c_md(i-1) = fail -> c_td(i) = 0
+			ENDCOND
+		ENDCOND
+	
+  END TemperatureMeter

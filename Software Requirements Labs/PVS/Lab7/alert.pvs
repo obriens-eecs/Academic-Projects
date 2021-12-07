@@ -1,0 +1,122 @@
+%% Function Table specifies a hold alarm for 1.5 seconds
+%% with TR = 0.5 seconds
+%% Use Case: alarm(i) for i ∈ 2..5 and alarm(6) = FALSE  
+alert: THEORY
+BEGIN
+  delta: posreal = 0.5 % TR = 0.5 seconds
+  IMPORTING Time[delta]
+
+  p:     [DTIME -> real]  % Monitored variable
+  alarm: [DTIME -> bool]  % Controlled variable
+
+  hi: real % trigger constant for alarm
+
+  % function table specifying high alarm system
+  % Once an alarm is triggered due to high pressure
+  % its shall remain on for 1.5 seconds
+  response(i:DTIME): bool =
+    COND
+        i = 0 -> NOT alarm(0) 
+      , i > 0 -> 
+        COND
+            p(i) >= hi
+	  -> alarm(i)=TRUE,
+            p(i) < hi AND held_for(alarm,1.5)(i-1)
+	  -> alarm(i) = FALSE,
+            p(i) < hi AND NOT held_for(alarm,1.5)(i-1)
+	  -> alarm(i) = alarm(i-1)
+          ENDCOND
+   ENDCOND
+   % There are 5 TCCs
+
+  % dummy discrete time variable
+  i: VAR DTIME
+
+%% Use Case Lemma 1: alarm at i=2 and i=3 %%%%%%%%%5
+  pre_uc1: bool =
+        p(0) < hi AND p(1) < hi 
+    AND p(2) = hi AND p(3) = hi
+    AND response(0)
+    AND response(1)
+    AND response(2)
+    AND response(3)
+
+  post_uc1: bool =
+     (NOT alarm(0)) AND (NOT alarm(1))
+      AND alarm(2) AND alarm(3)
+
+  usecase1_lemma1: LEMMA
+      pre_uc1
+    IMPLIES
+      post_uc1
+
+%% Use Case Lemma2: UC-Lemma1 and alarm at i=4
+  pre_uc2: bool =
+        pre_uc1
+    AND p(4) < hi 
+    AND response(4)
+
+  % This proof may grind
+  usecase1_lemma2: LEMMA
+    pre_uc2
+    IMPLIES
+    post_uc1 AND alarm(4)
+
+
+%% Use Case1 includes Lemma1 and Lemma2
+%% alarm at i = 5
+  usecase1: CONJECTURE
+        pre_uc1 AND pre_uc2 AND response(5) AND p(5) < hi
+    =>
+          post_uc1 AND alarm(4) AND alarm(5)
+% This proof will not grind
+% We must work our way through the cases in the function table
+
+
+%% Use Case 3 %%%%%
+%% As before alarm(i) for i ∈ 2..5
+%% but now ¬alarm(6), i.e. alarm(6) = FALSE 
+  pre_uc3: bool =
+    pre_uc1 AND pre_uc2 AND response(5) AND p(5) < hi
+    
+  usecase3: CONJECTURE
+        pre_uc1 AND pre_uc2 AND pre_uc3 AND response(6) AND p(6) < hi 
+    =>
+          post_uc1 AND alarm(4) AND alarm(5) AND (NOT alarm(6))
+   % Does not grind
+   % Work through cases in response function table
+
+
+%% Safety invariant: anytime pressure is high, there is an alarm
+  invariant(i): bool =
+    p(i) >= hi IMPLIES alarm(i)
+
+   % E-description
+   % System starts with safe pressure
+   environment: bool =
+     p(0) < hi
+
+   % Invariant holds 
+   inv_holds: CONJECTURE
+           environment
+       AND (FORALL i: response(i))
+     IMPLIES
+       (FORALL i: invariant(i))
+      % This will not grind
+
+%% Safety invariant:
+%% Whenever pressure is high for 0.5 seconds
+%% then alarm is triggered. 
+  danger(i): bool =
+    p(i) >= hi
+
+  invariant2: bool =
+    FORALL i: held_for(danger,0.5)(i) IMPLIES alarm(i)
+
+  % This will not grind
+  inv2_holds: CONJECTURE
+    (FORALL i: response(i)) IMPLIES invariant2
+       
+END alert
+
+

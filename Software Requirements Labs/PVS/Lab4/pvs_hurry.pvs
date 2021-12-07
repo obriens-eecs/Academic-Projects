@@ -1,0 +1,141 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% See notes at end of file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pvs_hurry : THEORY
+BEGIN
+
+% Challenge 1: Prove 4 + 3 = 7
+% Use only ASSERT
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+challenge1: CONJECTURE 4 + 3 = 7
+
+  % To prove the lemma above:
+    %    1. Put your cursor anywhere on the lemma 
+    %           (including challenge1, the word CONJECTURE, and the statement)
+    %    2. Type 'M-x pr' and hit enter. You can also go 'C-c p'
+    %    3. The proof window should open asking you to prove 4+3=7.
+    %    4. Type '(assert)'. This should prove it, presenting you with 'Q.E.D.'
+    %           (assert) applies decision logic that is built into PVS
+    %    5. M-x show-proof prints: ("" (assert))
+
+    % 'M' stands for the meta key, usually 'escape'
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Challenge 2: Prove that: p /\ (q \/ r) = (p /\ q) \/ (p /\ r)
+% USE ONLY SPLIT AND FLATTEN
+
+  p,q,r: bool  % Boolean constants of undetermined values
+  challenge2a: CONJECTURE p AND (q OR r) <=> (p AND q) OR (p AND r)
+
+  challenge2b: CONJECTURE (p AND (q OR r)) = ((p AND q) OR (p AND r))
+  % Rule? (iff) which converts top level boolean equality into IFF form
+
+  % Note that (grind) is a heavy weight that will auto prove the above
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Challenge 3: Prove that for all real numbers x, x^2 >= 0
+
+  challenge3: CONJECTURE FORALL (x:real): x^2 >= 0
+  % (x:real) means a variable whose type is real. The colon ':'
+  % is used after the name of a variable to specify its type.
+  %    1. Type '(skeep)' to get rid of the FORALL. Now you just have
+  %           a variable with the name x to work with.
+  %    2. What does x^2 mean? Expand the '^' symbol by typing
+  %           '(expand "^")' to find out.
+  %    3. Now, what does expt(x,2) mean? Type '(expand "expt")' and
+  %           To find out, keep expanding. 
+  %           (it is a recursive definition of exponent to the second power)
+  %    4. Now you just have to prove x*x>=0. Prove this by typing
+  %           '(assert)'. This command knows that x*x is nonnegative
+
+  % M-x tcp to prove all type correctness conditions. One TCC having to so
+  % with the next conjecture will still be unproved.
+  % We explain TCCSs in the next conjecture
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Challenge 4: Prove that for all real numbers x,y: x=2.5 AND (x/y)=1 => y=2.5
+  x,y: VAR real
+  challenge4a: CONJECTURE x=2.5 AND (x/y)=1 => y=2.5
+
+  % =========================================
+  % WITHOUT PVS, CAN YOU PROVE challen4g4a?==
+  % HOW?                                   ==
+  % =========================================
+
+  % Proving the above generrates a type correctness condition
+  % M-x tcp to see if all type correctness conditions discharge
+
+  % Subtype TCC generated (at line 90, column 39) for  y
+    % expected type  nznum
+  % unfinished
+  % challenge4a_TCC1: OBLIGATION FORALL (x, y: real): x = 2.5 IMPLIES y /= 0;
+
+  % Why the above TCC
+  % Can we prove the above TCC?
+
+  challenge4b: CONJECTURE x=2.5 AND y/= 0 AND (x/y)=1 => y=2.5
+  % No new TCC is intoduced
+  % ("" (skeep) (assert))
+ 
+  % C-c C-p f (prove file)
+  % C-c C-s p (show proof status)
+  % Proof summary for theory pvs_hurry
+  %   challenge1............................proved - complete   [shostak](0.01 s)
+  %   challenge2a...........................proved - complete   [shostak](0.00 s)
+  %   challenge2b...........................proved - complete   [shostak](0.01 s)
+  %   challenge3_TCC1.......................proved - complete   [shostak](0.00 s)
+  %   challenge3............................proved - complete   [shostak](0.02 s)
+  %   challenge4a_TCC1......................unfinished          [shostak](0.01 s)
+  %   challenge4a...........................proved - incomplete [shostak](0.00 s)
+  %   challenge4b...........................proved - complete   [shostak](0.02 s)
+  %   Theory totals: 8 formulas, 8 attempted, 6 succeeded (0.08 s)
+  
+END pvs_hurry
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% M-x nf		-- new PVS file
+% C-xs  		-- save file
+% C-xf   		-- find file
+% C-s 	   	 	-- search
+% C-g    	 	-- cancel command 
+% C-ct			-- type check current formula
+% C-c p	    	 	-- prove conjecture
+% C-c C-p f 		-- prove file (all theories) and show status
+% C-c C-s p 		-- show proof status
+% M-x show-proof	-- show proof
+% C-x 1			-- one window
+% M-x vpt view-prelude-theory
+% M-x typecheck-prove, M-x tcp        Typecheck the PVS file in the current buffer,
+% 
+% M-x show-tccs, (C-c C-q s) Show the TCCs of the indicated theory
+
+
+% When PVS proofs are expressed in a sequent calculus, the proof rule (flatten) 
+% (corresponds to the bottom-up application of either and-left or or-right, i.e.,
+
+% A,B,Gamma |- Delta
+% ------------------------ (and-left)
+% A /\ B, Gamma |- Delta
+
+
+% Gamma |- Delta, A,B
+% ----------------------- (or-right)
+% Gamma |- Delta, A \/ B 
+
+% On the other hand, the proof rule (split) corresponds to the bottom-up
+% application of either and-right or or-left, i.e.,
+
+
+% Gamma |- A, Delta     Gamma |- B, Delta
+% -------------------------------------- (and-right)
+% Gamma |- A /\ B, Delta
+
+
+% A, Gamma |- Delta  B,Gamma |- Delta
+% ----------------------------------- (or-left)
+% A \/ B, Gamma |- Delta
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

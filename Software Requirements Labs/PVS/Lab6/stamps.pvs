@@ -1,0 +1,101 @@
+stamps : Theory
+% From WIFT-95
+% Use any proof rules including (grind)
+% The theory stamps below contains the formula (conjecture stamps)
+% asserting that any postage requirement of
+% 8 cents or more can be met solely with 3 and 5 cent stamps,
+% i.e., is the sum of some multiple
+% of 3 and some multiple of 5.
+% (1) Prove conjecture stamps1 by induction.
+% (2) There is also a recursive function stampf (that can easily be implemented incode)
+% that computes a tuple (t,f) for each i. Prove conjecture stamp_recurs using
+% stampf to instantiate t and f (without induction).
+% Hint: you can use (assert) effectively once the proofs are started.
+ BEGIN
+  i, t, f: VAR nat  % t is Three and f is Five
+
+  %First typecheck and then ensure that all TCCs are proved
+  stamps : CONJECTURE
+    (FORALL i: (EXISTS t, f: i + 8 =  3 * t + 5 * f))
+
+%|- stamps : PROOF
+%|- (spread (induct i)
+%|-  ((then (inst 1 1 1) (assert))
+%|-   (then (skeep) (skeep -1)
+%|-    (spread (case "f=0")
+%|-     ((spread (inst 1 "t-3" "2") ((assert) (assert)))
+%|-      (spread (inst 2 "t+2" "f-1") ((assert) (assert))))))))
+%|- QED
+
+
+% Hint for the above: In abstract terms, the proof proceeds by induction on i.
+% In the base case, when i is 0, the left-hand side is 8.
+% Letting t and f both be 1 fulfills the equality.
+% In the induction case,
+% we know that that i + 8 can be expressed as 3*t + 5*f for some t and f and we need
+% to find T and F such that i + 8 + 1 is 3*T + 5*F. If F = 0, then T is at least 3. We then
+% let T be t - 3 and F be 2 (i.e. f + 2 with f=0), i.e.,
+% we remove three 3 cent stamps and add two 5 cent stamps
+% to get postage worth i + 8 + 1:
+% f=0 AND i + 8 = 3t + 5f IMPLIES i + 8 + 1 = 3(t-3) + f(f+2)
+% If f > 0, then we simply remove a 5 cent stamp and add
+% two 3 cent stamps to prove the induction conclusion.
+
+ % Now lets do the proof using recursion
+ % Return type is a Tuple [nat, nat]
+ % x`1 is the first field of the tuple
+ stampf (i : nat) : RECURSIVE { x : [nat, nat] | i+8 = 3 * x`1 + 5 * x`2 } =
+   IF i = 0 THEN (1,1)
+   ELSE LET (t,f) = stampf(i-1) IN
+        IF f = 0 THEN (t-3,f+2) % i.e. if the previous value of f is zero
+                 ELSE (t+2,f-1)
+        ENDIF
+   ENDIF
+   MEASURE i
+
+% Now instead of by induction, instantiate 
+% stampf appropriquitately
+ stamps_recurs : LEMMA
+    (FORALL i: (EXISTS t, f: i + 8 =  3 * t + 5 * f))
+
+%|- stamps_recurs : PROOF
+%|- (then (skeep) (inst 1 "stampf(i)`1" "stampf(i)`2") (assert))
+%|- QED
+
+% Now use PVSio to run_stamps
+run_stamps: void =
+ let i = query_int("Enter i:") IN
+ Let n = i + 8 IN
+ assert (i >= 0, "Input Error") &
+ println("(threes,fives) = ("+ stampf(i)`1+","+ stampf(i)`2+")")&
+ println(n+" = 3*"+stampf(i)`1+" + 5*"+stampf(i)`2)
+
+% To enter the Lisp evaluator
+% M-x pvsio
+% <PVSio> run_stamps;
+% Enter i:
+% 16
+% (threes,fives) = (8,0)
+% 24 = 3*8 + 5*0
+% quit;
+
+% <PVSio> run_stamps;
+% Enter i:
+% 44
+% (threes,fives) = (14,2)
+% 52 = 44+8 =3*14 + 5*2
+
+END stamps
+
+% At the end you must have: (with C-c C-p f, i.e. prove file)
+% Proof summary for theory stamps
+%     stamps................................proved - complete   [shostak](0.19 s)
+%     stampf_TCC1...........................proved - complete   [shostak](0.00 s)
+%     stampf_TCC2...........................proved - complete   [shostak](0.07 s)
+%     stampf_TCC3...........................proved - complete   [shostak](0.11 s)
+%     stampf_TCC4...........................proved - complete   [shostak](0.06 s)
+%     stampf_TCC5...........................proved - complete   [shostak](0.12 s)
+%     stampf_TCC6...........................proved - complete   [shostak](0.01 s)
+%     stampf_TCC7...........................proved - complete   [shostak](0.00 s)
+%     stamps_recurs.........................proved - complete   [shostak](0.05 s)
+%     Theory totals: 9 formulas, 9 attempted, 9 succeeded (0.62 s)

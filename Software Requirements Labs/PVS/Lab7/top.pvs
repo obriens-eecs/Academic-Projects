@@ -1,0 +1,10 @@
+
+% proveit --importchain --clean top.pvs
+top : THEORY
+BEGIN
+   IMPORTING Time
+   IMPORTING date
+   IMPORTING pressure
+   IMPORTING alert
+   IMPORTING car_interlock
+END top

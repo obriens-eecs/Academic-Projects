@@ -1,0 +1,10 @@
+% Exercises for Lab6
+% proveit --importchain --clean top.pvs
+top : THEORY
+BEGIN
+   IMPORTING predicate_thm
+   IMPORTING alarm
+   IMPORTING signum
+   IMPORTING stamps
+   IMPORTING sqrt2
+END top

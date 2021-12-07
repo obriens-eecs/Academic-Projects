@@ -1,0 +1,28 @@
+% Ensure that spec_ft is type correct
+% Proof the invariant
+% You may use grind
+pressure : THEORY
+BEGIN
+delta: posreal = 1 % TR = 1 seconds
+importing Time[delta]
+i: VAR DTIME
+normal, hi: real % Real constants
+
+
+p: [DTIME -> real]     % Pressure (monitored variable)
+alarm: [DTIME -> bool] % Controlled variable
+
+spec_ft(i:DTIME): bool =
+  COND
+    %TBD
+  ENDCOND
+
+% Spec Validation: Invariant
+% Given that the specification holds at all times
+% the alarm is activated when pressure is high
+  invariant: CONJECTURE
+    (FORALL (i:DTIME): spec_ft(i)) AND NOT p(0)=hi
+    IMPLIES
+    (FORALL (i:DTIME): p(i) = hi => alarm(i))
+
+END pressure

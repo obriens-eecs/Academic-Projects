@@ -1,0 +1,74 @@
+% Date Spec
+% To Be Done: see ??
+% May use (grind)
+
+date: THEORY
+BEGIN
+
+YEAR : TYPE = subrange(1583,9999)
+MONTH: TYPE = subrange(1,12)
+DAY :  TYPE = subrange(1,31)
+
+LEAP: set[nat] = {x: nat | x=100 OR x=200 OR x=300}
+MONTH31: set[MONTH] = {x: MONTH | x=1 OR x=3 OR x=5
+                         OR x=7 OR x=8 OR x=10 OR x=12}
+MONTH30: set[MONTH] = {x: MONTH | x=4 OR x=6 OR x=9 OR x=11}
+
+% Note that a set is just a predicate
+set_conjecture1: CONJECTURE
+   LEAP(100) AND NOT LEAP(150) AND member(100,LEAP)
+
+
+% definition of leap year using the mod theory
+%y: nat
+leapyr(y: YEAR): bool =
+  ?????
+
+
+conj1: CONJECTURE
+  NOT leapyr(1583)
+
+% M-x pvsio
+% <PVSio> print(leapyr(1583));
+% FALSE
+% <PVSio> print(leapyr(1584));
+% TRUE
+% <PVSio> 
+
+conj3: CONJECTURE
+  NOT leapyr(1900)
+
+conj4: CONJECTURE
+  leapyr(2000)
+
+  
+%input variables (undetermined constants)
+y: VAR YEAR
+m: VAR MONTH
+d: VAR DAY
+
+% output variables
+valid: bool
+err: nat
+
+date_valid(y,m,d): bool =
+  COND
+     MONTH31(m)
+  -> valid = True AND err = 0,
+     MONTH30(m) AND d <= 30
+  -> valid = True and err = 0,
+     MONTH30(m) AND d > 30
+  -> valid = False and err = 1,
+     m = 2 AND leapyr(y) AND d <= 29
+  -> ?????
+  ENDCOND
+
+date_validity_check1: CONJECTURE
+  date_valid(y,m,d) => NOT (valid = True AND err > 0)
+
+date_validity_check2: CONJECTURE
+  date_valid(y,m,d) =>  (0 <= err AND err <= 3)
+
+test: CONJECTURE date_valid(1900, 2, 28) IMPLIES valid and err=0
+
+END date

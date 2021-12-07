@@ -1,0 +1,41 @@
+HeatControl  [ delta: posreal ]
+		: THEORY
+
+  BEGIN
+
+	importing Time[delta]
+	importing Mode[delta]
+	i: VAR DTIME
+	
+	c_hc : [DTIME -> SWITCH]
+		
+	c_hc_func(i): bool = 
+		COND
+		i = 0 -> c_hc(i) = off,
+		i > 0 ->
+			COND
+			c_md(i-1) = off -> c_hc(i) = off,
+			c_md(i-1) = init ->
+				COND
+				m_st(i) = invalid -> c_hc(i) = off,
+				m_st(i) = valid ->
+					COND
+					NOT(valid_desired(i)) -> c_hc(i) = off
+					valid_desired(i) ->
+						COND
+						m_tm(i) > m_dh(i) -> c_hc(i) = off,
+						m_tm(i) < m_dl(i) -> c_hc(i) = on
+						ENDCOND
+					ENDCOND
+			c_md(i-1) = normal ->
+				COND
+				valid_desired(i) ->
+					COND
+					m_tm(i) > m_dh(i) -> c_hc(i) = off,
+					m_tm(i) < m_dl(i) -> c_hc(i) = on
+					ENDCOND
+				NOT(valid_desired(i)) -> c_hc(i) = off
+				ENDCOND
+			c_md(i-1) = fail -> c_hc(i) = off
+		ENDCOND
+  END HeatControl

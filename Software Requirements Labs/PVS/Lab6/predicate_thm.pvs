@@ -1,0 +1,37 @@
+predicate_thm[T1: TYPE+, T2: TYPE+]: THEORY
+ % T is a generic nonempty type
+BEGIN
+
+x: VAR T1
+y: VAR T2
+% dummy variables of type T
+P: VAR [T1,T2 -> bool]              % Predicate in type T x T
+
+  EA_Thm: LEMMA
+    (EXISTS x: (FORALL y: P(x,y)))
+    => (FORALL y: (EXISTS x: P(x,y)))
+
+%|- EA_Thm : PROOF
+%|- (then (skeep) (skeep 1) (skeep -1) (inst 1 x) (inst -1 y))
+%|- QED
+
+% e.g. Let P(x,y) := y >= x
+% x,y: nat
+% (grind) will also prove the above automatically
+
+EA2_Thm: CONJECTURE
+    (EXISTS y: (FORALL x: P(x,y)))
+    => (FORALL x: (EXISTS y: P(x,y)))
+
+%|- EA2_Thm : PROOF
+%|- (grind)
+%|- QED
+
+END predicate_thm
+
+  % conjecture2: CONJECTURE
+  %   (FORALL x: (EXISTS y: P(x,y))) => (EXISTS y: (FORALL x: P(x,y)))
+  % IS THIS a THEOREM?
+  % If it is prove it!
+  % If not, find a counter-example,
+  % i.e. let P(x,y) be some concrete predicate such as admires

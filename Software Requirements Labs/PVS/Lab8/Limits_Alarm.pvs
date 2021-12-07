@@ -1,0 +1,204 @@
+%Three TBD
+% Make sure you understand the proofs even without grind
+Limits_Alarm[delta: posreal] : THEORY
+  BEGIN
+    importing Time[delta]
+    importing Hysteresis[delta]
+
+    % ===============================================================
+    % Input-Output Declarations of the Limits_Alarm function block
+    % =============================================================== 
+    %                            +---------+ 
+    %                            | LIMITS_ | 
+    %                            |  ALARM  |
+    %     (* High limit *) REAL--|H      QH|--BOOL (* High flag *)
+    % (* Variable value *) REAL--|X       Q|--BOOL (* Alarm output *)
+    %    (* Lower limit *) REAL--|L      QL|--BOOL (* Low flag *)
+    %     (* Hysteresis *) REAL--|EPS      |   
+    %                            +---------+
+
+    % ===============================================================
+    % Monitored Variables
+    % ===============================================================
+    H   : VAR [DTIME -> real]  % high limit
+    X   : VAR [DTIME -> real]  % signal value
+    L   : VAR [DTIME -> real]  % low limit
+    EPS : VAR [DTIME -> real]  % hysteresis band size
+
+    % ===============================================================
+    % controlled variables
+    % ===============================================================
+    QH  : VAR [DTIME -> BOOL]
+    Q   : VAR [DTIME -> BOOL]
+    QL  : VAR [DTIME -> BOOL]
+
+    % ===============================================================
+    % basic functions for the FBD implementation
+    % ===============================================================
+    r1, r2, r3 : VAR [DTIME -> real]
+    nzr        : VAR [DTIME -> {r: real | r /= 0}] 
+    b1, b2, b3 : VAR [DTIME -> BOOL]
+
+    minus   (r1, r2, r3) : bool = FORALL (i: DTIME): r3(i) = r1(i) - r2(i)
+    plus    (r1, r2, r3) : bool = FORALL (i: DTIME): r3(i) = r1(i) + r2(i)
+    divide  (r1, nzr, r3): bool = FORALL (i: DTIME): r3(i) = r1(i) / nzr(i)
+    gte_one (b1, b2, b3) : bool = FORALL (i: DTIME): b3(i) = IF b1(i) + b2(i) >= 1 THEN 1 ELSE 0 ENDIF
+
+    % ===============================================================
+    % FBD implementation of the LIMITS_ALARM block
+    % ===============================================================
+    limits_alarm_fbd (H, X, L, EPS, QH, Q, QL): bool = FALSE
+    %TBD
+
+    % ===============================================================
+    % 1st environment assumption: positive hysteresis band size
+    % ===============================================================
+    env_1 (H, X, L, EPS): bool =
+      FORALL (i: DTIME):
+        EPS(i) > 0
+
+    % ===============================================================
+    % Requirements of the high alarm 'QH'
+    % ===============================================================
+    high_alarm_req (H, X, L, EPS, QH): bool =
+      env_1 (H, X, L, EPS)
+      IMPLIES
+      FORALL (i: DTIME):
+        COND
+        i = 0 ->                       QH(0) = 0,
+        i > 0 -> 
+          COND
+          % ===========================================
+              X(i) > H(i)           -> QH(i) = 1,
+          % ===========================================
+              X(i) <= H(i)
+          AND X(i) >= H(i) - EPS(i) -> QH(i) = QH(i-1),
+          % ===========================================
+              X(i) <  H(i) - EPS(i) -> QH(i) = 0
+          % ===========================================
+          ENDCOND
+        ENDCOND
+
+    % ===============================================================
+    % Requirements of the low alarm 'QL'
+    % ===============================================================
+    low_alarm_req (H, X, L, EPS, QL): bool =
+      env_1 (H, X, L, EPS)
+      IMPLIES
+      FORALL (i: DTIME):
+        COND
+        i = 0 ->                       QL(0) = 0,
+        i > 0 -> 
+          COND
+          % ==============================================================================
+              X(i) >  L(i) + EPS(i)  -> QL(i) = 0,
+          % ==============================================================================
+              X(i) <= L(i) + EPS(i)
+          AND X(i) >= L(i)          -> QL(i) = QL(i-1),
+          % ==============================================================================
+              X(i) <  L(i)          -> QL(i) = 1
+          % ==============================================================================
+          ENDCOND
+        ENDCOND 
+
+    % ===============================================================
+    % Requirements of the Limits_Alarm: QH, QL, and Q
+    % ===============================================================
+    limits_alarm_req (H, X, L, EPS, QH, Q, QL): bool =
+          high_alarm_req (H, X, L, EPS, QH)
+      AND low_alarm_req  (H, X, L, EPS, QL)
+      AND gte_one        (QH, QL, Q)
+
+    % ===============================================================
+    % The FBD implementation entails the requirements
+    % ===============================================================
+    correct_limits_alarm_fbd : THEOREM
+      (env_1            (H, X, L, EPS)
+       AND
+       limits_alarm_fbd (H, X, L, EPS, QH, Q, QL))
+      IMPLIES 
+      limits_alarm_req (H, X, L, EPS, QH, Q, QL)
+
+    % ===============================================================
+    % 2nd environment assumption: non-overlapping low- and high-alarm 
+    %                             hysteresis regions
+    % ===============================================================
+    env_2 (H, X, L, EPS): bool = TRUE
+    % TBD
+
+    % ===============================================================
+    % Invariant function on the abstract state (controlled variables)
+    % ===============================================================
+    no_simultaneous_alarms (QH, Q, QL): bool =
+      FORALL (i: DTIME): 
+        NOT( QH(i) = 1 AND QL(i) = 1 )
+
+    % ===============================================================
+    % The requirements entails the invariant
+    % ===============================================================
+    req_entails_inv : THEOREM
+    % TBD
+    % limit alarm implementation satsifies specification
+
+
+
+    % ===============================================================
+    % 2nd version of the requirements of Limits Alarm: 
+    % All three controlled variables placed in a single function table
+    % This version is much harder to be proved correct and the invariant. 
+    % ===============================================================
+    limits_alarm_req2 (H, X, L, EPS, QH, Q, QL): bool =
+      env_1 (H, X, L, EPS)
+      AND
+      env_2 (H, X, L, EPS)
+      IMPLIES
+      FORALL (i: DTIME):
+        COND
+        i = 0 ->                       QH(0) = 0       AND Q(0) = 0     AND QL(0) = 0,
+        i > 0 -> 
+          COND
+          % ==============================================================================
+              X(i) > H(i)           -> QH(i) = 1       AND Q(i) = 1     AND QL(i) = 0,
+          % ==============================================================================
+              X(i) <= H(i)
+          AND X(i) >= H(i) - EPS(i) -> QH(i) = QH(i-1) AND Q(i) = QH(i) AND QL(i) = 0,
+          % ==============================================================================
+              X(i) <  H(i) - EPS(i)
+          AND X(i) >  L(i) + EPS(i) -> QH(i) = 0       AND Q(i) = 0     AND QL(i) = 0,
+          % ==============================================================================
+              X(i) <= L(i) + EPS(i)
+          AND X(i) >= L(i)          -> QH(i) = 0       AND Q(i) = QL(i) AND QL(i) = QL(i-1),
+          % ==============================================================================
+              X(i) <  L(i)          -> QH(i) = 0       AND Q(i) = 1     AND QL(i) = 1
+          % ==============================================================================
+          ENDCOND
+        ENDCOND
+
+   
+  END Limits_Alarm
+  
+% ===============================================================
+    % The FBD implementation entails the invariant 
+    % This is not necessary as IMPLIES is transitive:
+    % (FBD => REQ) AND (REQ => INV) => (FBD => INV)
+    % ===============================================================
+    % fbd_entails_inv : THEOREM
+    %   (env_1            (H, X, L, EPS)
+    %    AND
+    %    env_2            (H, X, L, EPS)
+    %    AND
+    %    limits_alarm_fbd (H, X, L, EPS, QH, Q, QL))
+    %   IMPLIES 
+    %   no_simultaneous_alarms (QH, Q, QL)
+
+  % ===============================================================
+    % Proof that the two requirements are equivalent
+    % ===============================================================
+    % consistent_limits_alarm_req : THEOREM
+    %   env_1 (H, X, L, EPS)
+    %   AND 
+    %   env_2 (H, X, L, EPS)
+    %   IMPLIES
+    %   (limits_alarm_req (H, X, L, EPS, QH, Q, QL) 
+    %    IFF
+    %    limits_alarm_req2 (H, X, L, EPS, QH, Q, QL))

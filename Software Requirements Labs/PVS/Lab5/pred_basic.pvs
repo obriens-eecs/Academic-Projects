@@ -1,0 +1,101 @@
+%%%   Examples and exercises for basic predicate proofs
+%%%   Quantified Formulas  
+
+% Please use split, flatten, inst, and skolem (or skeep), and their 
+% variants, as appropriate. Do not use other proof rules.
+
+% Note that most of the lemmas can be discharged automatically
+% with (grind). However, doing grind will defeat the purpose
+% of the Excercise.
+
+%% Do not change anything in this file
+
+pred_basic: THEORY
+BEGIN
+
+  arb: TYPE+                        % Arbitrary nonempty type
+
+  arb_pred: TYPE = [arb -> bool]    % Predicate type for arb
+
+  a,b,c: arb                        % Constants of type arb
+
+  x,y,z: VAR arb                    % Variables of type arb
+
+  P,Q,R: arb_pred                   % Predicate names
+
+%----------------------------------------------------------------
+
+  quant_0: LEMMA  (FORALL x: P(x)) => P(a)
+  % Notice that if proved, then it holds for arbitrary constant a
+  % and arbitrary predicate P(x)
+
+  quant_1: LEMMA  ((FORALL x: P(x) => Q(x)) AND P(a)) => Q(a)
+
+  quant_2: LEMMA  (FORALL x: P(x)) => (EXISTS y: P(y))
+  % Hint: we have some constants lying around
+
+  quant_3: LEMMA  (FORALL x: P(x)) OR (EXISTS y: NOT P(y))
+
+  quant_4: LEMMA  NOT (FORALL x: P(x)) IFF (EXISTS x: NOT P(x))
+
+  quant_5: LEMMA  NOT (EXISTS x: P(x)) IFF (FORALL x: NOT P(x))
+
+  quant_6: LEMMA  (FORALL x: P(x)) AND (FORALL x: Q(x))
+                  IFF (FORALL x: P(x) AND Q(x))
+
+  quant_7: LEMMA  (EXISTS x: P(x)) OR (EXISTS x: Q(x))
+                  IFF (EXISTS x: P(x) OR Q(x))
+
+
+
+  l,m,n:  VAR int
+% Try a decision procedure here.
+  distrib: LEMMA  l * (m + n) = (l * m) + (l * n)
+
+% A recursive function
+  i,j,k: VAR nat
+
+  half(i): RECURSIVE nat =
+    (IF (i = 0 OR i=1) THEN 0 ELSE half(i-2)+1 ENDIF)
+    MEASURE i
+    % The above function has two type correctness conditions.
+    % WHY?
+    % Make sure you know how to inspect and prove TCCs
+
+  half_halves: CONJECTURE half(2*i) = i
+  % You will need to use induct, expand and skeep for this one. 
+
+END pred_basic
+
+%  Proof summary for theory pred_basic
+%     quant_0...............................proved - complete   [shostak](0.02 s)
+%     quant_1...............................proved - complete   [shostak](0.00 s)
+%     quant_2...............................proved - complete   [shostak](0.00 s)
+%     quant_3...............................proved - complete   [shostak](0.00 s)
+%     quant_4...............................proved - complete   [shostak](0.00 s)
+%     quant_5...............................proved - complete   [shostak](0.02 s)
+%     quant_6...............................proved - complete   [shostak](0.02 s)
+%     quant_7...............................proved - complete   [shostak](0.03 s)
+%     distrib...............................proved - complete   [shostak](0.04 s)
+%     half_TCC1.............................proved - complete   [shostak](0.02 s)
+%     half_TCC2.............................proved - complete   [shostak](0.01 s)
+%     half_halves...........................proved - complete   [shostak](0.03 s)
+%     Theory totals: 12 formulas, 12 attempted, 12 succeeded (0.19 s)
+
+% Grand Totals: 12 proofs, 12 attempted, 12 succeeded (0.18 s)
+
+% TYPE CORRECTNESS CONDITIONS for half
+% Subtype TCC generated (at line 58, column 40) for  i - 2
+    % expected type  nat
+  % unfinished
+% half_TCC1: OBLIGATION
+%   FORALL (i: nat): NOT i = 0 AND NOT i = 1 IMPLIES i - 2 >= 0;
+
+% Termination TCC generated (at line 58, column 35) for  half(i - 2)
+  % unfinished
+% half_TCC2: OBLIGATION
+%   FORALL (i: nat): NOT i = 0 AND NOT i = 1 IMPLIES i - 2 < i;
+
+%half((2 * (j + 1))-2)
+%= half(2*j + 2 -2)
+%= half(2*j)

@@ -1,0 +1,63 @@
+Alarm   [ delta: posreal ]
+		: THEORY
+
+  BEGIN
+  
+	importing Time[delta]
+	importing Mode[delta]
+	i: VAR DTIME
+	
+	STATE: NONEMPTY_TYPE = {valid, invalid}
+    LOW_DESIRE: TYPE+ = subrange(97, 99)
+    UPPER_DESIRE: TYPE+ = subrange(98,100)
+    LOW_ALARM: TYPE+ = subrange(93, 98)
+    UPPER_ALARM: TYPE+ = subrange(99, 103)
+	SWITCH: NONEMPTY_TYPE = {on, off}
+	TEMP_RANGE: NONEMPTY_TYPE = {r: real | (68.0 <= r AND r<= 105.0) OR r = 0}
+	MODE: NONEMPTY_TYPE = {off, init, normal, fail}
+	
+	m_st : [DTIME -> STATE]
+    m_dl : [DTIME -> LOW_DESIRE]
+    m_dh : [DTIME -> UPPER_DESIRE]
+    m_al : [DTIME -> LOW_ALARM]
+    m_ah : [DTIME -> UPPER_ALARM]
+	m_sw : [DTIME -> SWITCH]
+	m_tm : [DTIME -> TEMP_RANGE]
+	
+    c_al: [DTIME -> SWITCH]
+	
+	convert_tf(i): bool =
+		COND
+		c_al(i) = on -> TRUE,
+		c_al(i) = off -> FALSE
+		ENDCOND
+	
+	c_al_ft(i): bool =
+		COND
+		i = 0 -> c_al(i) = off,
+		i > 0 ->
+			COND
+			c_md(i-1) = off -> c_al(i) = off,
+			c_md(i-1) = init -> c_al(i) = off,
+			c_md(i-1) = normal ->
+				COND
+				valid_desired(i) ->
+					COND
+					valid_temp(i) -> c_al(i) = off,
+					NOT (valid_temp(i)) -> c_al(i) = on
+					ENDCOND,
+				NOT (valid_desired(i)) -> c_al(i) = on
+				ENDCOND,
+			c_md(i-1) = fail ->
+				COND
+				c_al(i-1) = on ->
+					COND
+					held_for(convert_tf,10)(i-1) = TRUE -> c_al(i) = off,
+					held_for(convert_tf,10)(i-1) = FALSE -> c_al(i) = on
+					ENDCOND,
+				c_al(i-1) = off -> c_al(i) = on
+				ENDCOND
+			ENDCOND
+		ENDCOND
+		
+  END Alarm

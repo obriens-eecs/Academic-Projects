@@ -1,0 +1,52 @@
+% Try without resorting to grind wherever possible
+
+test: THEORY
+BEGIN
+  delta: posreal = 1.0 
+  IMPORTING Time[delta]
+
+  input(i:DTIME): real =
+    COND
+      i < 2 -> 1.0,
+      2 <= i AND i <= 4 -> 5.0,
+      i > 4 -> 1.0
+    ENDCOND
+    
+  hi(i:DTIME): bool = input(i) = 5
+
+  check0: LEMMA
+    2/delta = 2
+
+  check1: CONJECTURE
+     held_for(hi,2)(0) = hi(0)
+
+  check1a: CONJECTURE
+    hi(0) = False
+
+  check2: CONJECTURE
+     (held_for(hi,2)(1) = (hi(0) AND hi(1))) AND (NOT held_for(hi,2)(1))
+  
+  check4: CONJECTURE
+     held_for(hi,2)(2) = (hi(0) AND hi(1) AND hi(2))
+
+  check5: CONJECTURE
+     held_for(hi,2)(3) = (hi(1) AND hi(2) AND hi(3))
+
+  check6: CONJECTURE
+     held_for(hi,2)(4) = (hi(2) AND hi(3) AND hi(4)) AND (held_for(hi,2)(4))
+
+  check7: CONJECTURE
+     hi(2) AND hi(3) AND hi(4)
+
+
+  % % Should not be able to prove the following
+  % input2(i:DTIME): bool =
+  %   COND
+  %     i < 2 -> True,
+  %     2 <= i -> False
+  %   ENDCOND
+
+  % check7: CONJECTURE
+  %    held_for(input2,2)(0) 
+
+END test

@@ -1,0 +1,72 @@
+signum : THEORY
+% In the following do NOT use (grind) or (bash)
+% You may use any other basic rules
+% completeness/disjointness and recursion
+BEGIN
+  %----------Question 1: Disjointness---------------------
+  %The following does not typecheck: M-tcp and then M-tccs
+  % Fix it so that it does
+  x: VAR real
+  sign(x): int = COND
+    x<0  -> -1, 
+    x=0  ->  0,
+    x>0  ->  1
+  ENDCOND
+
+% Disjointness TCC generated (at line 6, column 17) for
+% COND x <= 0 -> -1, x = 0 -> 0, x > 0 -> 1 ENDCOND
+% unfinished 
+% sign_TCC1: OBLIGATION
+% FORALL (x: real):
+% NOT (x <= 0 AND x = 0) AND NOT (x <= 0 AND x > 0) AND NOT (x = 0 AND x > 0);
+
+ %----------Question 2: Recursion and induction--------------
+%Recursion
+  n: VAR nat
+  sum(n): RECURSIVE nat =
+   IF n = 0 THEN 0 ELSE n + sum(n - 1) ENDIF
+   MEASURE n
+
+% The above has the following TCCS. which pass: 
+% Subtype TCC generated (at line 15, column 32) for  n - 1
+    % expected type  nat
+  % proved - complete
+%sum_TCC1: OBLIGATION FORALL (n: nat): NOT n = 0 IMPLIES n - 1 >= 0;
+
+% Termination TCC generated (at line 15, column 28) for  sum(n - 1)
+  % proved - complete
+%sum_TCC2: OBLIGATION FORALL (n: nat): NOT n = 0 IMPLIES n - 1 < n;
+
+% Prove the following using induction
+%InductionL (induct "n")
+  closed_form: THEOREM 
+    sum(n) = (n * (n + 1)) / 2
+
+%|- closed_form : PROOF
+%|- (spread (induct "n")
+%|-  ((then (expand "sum") (propax))
+%|-   (then (skeep) (expand "sum" 1) (assert))))
+%|- QED
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Higher order functions, you may use GRIND %%%%
+  f,g : VAR [nat -> nat]
+
+% Sum over any Nat function f
+  sum(f,n) : RECURSIVE nat =
+    IF n = 0 THEN
+      0
+    ELSE
+      f(n-1) + sum(f, n - 1)
+    ENDIF
+  MEASURE n
+
+% An example of f
+  square(n) : nat = n * n
+
+  sum_of_squares : CONJECTURE
+    6 * sum(square, n+1) = n * (n+1) * (2*n + 1)
+
+ %----------------------------------------------------------
+
+END signum

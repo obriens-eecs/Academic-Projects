@@ -1,0 +1,60 @@
+propositional_logic: THEORY
+BEGIN
+
+% All conjectures in this THEORY may be proven by using
+% only the strategies (flatten) and (split), if the conjecture holds.
+% Not all conjectures hold.
+ 
+ A, B, C: bool
+
+prop1: CONJECTURE
+   (A IMPLIES (B IMPLIES C)) AND (A IMPLIES B) AND A IMPLIES C
+
+prop2: CONJECTURE
+       (A => B) => (NOT A => NOT B)
+
+P,Q,R,P1,P2,Q1,Q2 : bool
+
+ simple1 : CONJECTURE
+     P AND Q IMPLIES P OR Q
+
+ simple2 : CONJECTURE
+    (P IMPLIES Q)
+    IMPLIES
+    (Q IMPLIES R)
+    IMPLIES
+    (P IMPLIES R)
+
+  simple3: CONJECTURE
+    (Q OR (Q AND P)) AND (Q OR P) <=> Q
+
+ pierces_law: CONJECTURE
+    ((P IMPLIES Q) IMPLIES P) IMPLIES P
+
+ distribution1 : CONJECTURE
+    ((P1 OR P2) AND R) 
+  IFF  
+    ((P1 AND R) OR (P2 AND R))
+
+ distribution2 : CONJECTURE
+    ((P1 OR P2) AND (Q1 OR Q2)) 
+  IFF  
+    ((P1 AND Q1) OR (P1 AND Q2) OR (P2 AND Q2) OR (P2 AND Q1))
+
+ de_morgan1: CONJECTURE
+    (NOT (P OR Q)) IFF ((NOT P) AND (NOT Q))
+
+ % Now try to prove the next lemma using the strategy (prop).
+
+ de_morgan2: CONJECTURE
+    (NOT (P AND Q)) IFF ((NOT P) OR (NOT Q))
+
+END propositional_logic
+
+% Note that (prop) can always be used to flatten and split
+%automatically. What does the following mean?
+
+% {-1}  B
+% {-2}  B
+%   |-------
+% {1}   A
